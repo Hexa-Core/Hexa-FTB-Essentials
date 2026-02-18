@@ -7,6 +7,8 @@ import dev.architectury.platform.Platform;
 import dev.ftb.mods.ftbessentials.command.FTBEssentialsCommands;
 import dev.ftb.mods.ftbessentials.command.TPACommands;
 import dev.ftb.mods.ftbessentials.config.FTBEConfig;
+import dev.ftb.mods.ftbessentials.kitclaim.KitClaimConfig;
+import dev.ftb.mods.ftbessentials.kitclaim.KitClaimPermissionUtil;
 import dev.ftb.mods.ftbessentials.kit.KitManager;
 import dev.ftb.mods.ftbessentials.util.DimensionFilter;
 import dev.ftb.mods.ftbessentials.util.FTBEPlayerData;
@@ -77,6 +79,8 @@ public class FTBEEventHandler {
 		Path defaultConfigFilePath = Platform.getConfigFolder().resolve("../defaultconfigs/ftbessentials-server.snbt");
 
 		FTBEConfig.CONFIG.load(configFilePath, defaultConfigFilePath, () -> DEFAULT_CONFIG);
+		KitClaimPermissionUtil.init();
+		KitClaimConfig.load(Platform.getConfigFolder());
 		DimensionFilter.clearMatcherCaches();
 
 		FTBEPlayerData.clear();

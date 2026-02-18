@@ -9,6 +9,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dev.ftb.mods.ftbessentials.config.FTBEConfig;
 import dev.ftb.mods.ftbessentials.kit.Kit;
 import dev.ftb.mods.ftbessentials.kit.KitManager;
+import dev.ftb.mods.ftbessentials.kitclaim.KitClaimService;
 import dev.ftb.mods.ftbessentials.util.BlockUtil;
 import dev.ftb.mods.ftbessentials.util.DurationInfo;
 import dev.ftb.mods.ftbessentials.util.FTBEPlayerData;
@@ -40,8 +41,22 @@ public class KitCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         if (FTBEConfig.KIT.isEnabled()) {
             dispatcher.register(literal("kit")
-                    .requires(FTBEConfig.KIT.enabledAndOp())
+                    .requires(FTBEConfig.KIT)
+                    .then(literal("claim")
+                            .then(argument("name", StringArgumentType.word())
+                                    .suggests(KitClaimService::suggestClaimableKits)
+                                    .executes(ctx -> KitClaimService.claimKit(ctx.getSource(), StringArgumentType.getString(ctx, "name")))
+                            )
+                            .executes(ctx -> {
+                                ctx.getSource().sendFailure(Component.literal("Usage: /kit claim <kit>"));
+                                return 0;
+                            })
+                    )
+                    .then(literal("list")
+                            .executes(ctx -> KitClaimService.listClaimableKits(ctx.getSource()))
+                    )
                     .then(literal("create_from_player_inv")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .executes(ctx -> createKitFromPlayer(ctx.getSource(), StringArgumentType.getString(ctx, "name"), "", false))
                                     .then(argument("cooldown", StringArgumentType.greedyString())
@@ -51,6 +66,7 @@ public class KitCommands {
                             )
                     )
                     .then(literal("create_from_player_hotbar")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .executes(ctx -> createKitFromPlayer(ctx.getSource(), StringArgumentType.getString(ctx, "name"), "", true))
                                     .then(argument("cooldown", StringArgumentType.greedyString())
@@ -60,6 +76,7 @@ public class KitCommands {
                             )
                     )
                     .then(literal("create_from_block_inv")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .executes(ctx -> createKitFromBlock(ctx.getSource(), StringArgumentType.getString(ctx, "name"), ""))
                                     .then(argument("cooldown", StringArgumentType.greedyString())
@@ -69,21 +86,21 @@ public class KitCommands {
                             )
                     )
                     .then(literal("delete")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .suggests((ctx, builder) -> suggestKits(builder))
                                     .executes(ctx -> deleteKit(ctx.getSource(), StringArgumentType.getString(ctx, "name")))
                             )
                     )
-                    .then(literal("list")
-                            .executes(ctx -> listKits(ctx.getSource()))
-                    )
                     .then(literal("show")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .suggests((ctx, builder) -> suggestKits(builder))
                                     .executes(ctx -> showKit(ctx.getSource(), StringArgumentType.getString(ctx, "name")))
                             )
                     )
                     .then(literal("give")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("players", EntityArgument.players())
                                     .then(argument("name", StringArgumentType.word())
                                             .suggests((ctx, builder) -> suggestKits(builder))
@@ -92,12 +109,14 @@ public class KitCommands {
                             )
                     )
                     .then(literal("put_in_block_inv")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .suggests((ctx, builder) -> suggestKits(builder))
                                     .executes(ctx -> putKitInBlockInv(ctx.getSource(), StringArgumentType.getString(ctx, "name")))
                             )
                     )
                     .then(literal("cooldown")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .suggests((ctx, builder) -> suggestKits(builder))
                                     .then(argument("cooldown", StringArgumentType.greedyString())
@@ -107,6 +126,7 @@ public class KitCommands {
                             )
                     )
                     .then(literal("reset_cooldown")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .suggests((ctx, builder) -> suggestKits(builder))
                                     .executes(ctx -> resetCooldowns(ctx.getSource(), StringArgumentType.getString(ctx, "name")))
@@ -119,6 +139,7 @@ public class KitCommands {
                             )
                     )
                     .then(literal("set_autogrant")
+                            .requires(FTBEConfig.KIT.enabledAndOp())
                             .then(argument("name", StringArgumentType.word())
                                     .suggests((ctx, builder) -> suggestKits(builder))
                                     .then(argument("grant", BoolArgumentType.bool())
