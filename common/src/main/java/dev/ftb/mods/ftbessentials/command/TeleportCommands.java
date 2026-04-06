@@ -32,8 +32,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Objects;
-
 /**
  * @author LatvianModder
  */
@@ -53,13 +51,6 @@ public class TeleportCommands {
 			dispatcher.register(Commands.literal("spawn")
 					.requires(FTBEConfig.SPAWN)
 					.executes(context -> spawn(context.getSource().getPlayerOrException()))
-			);
-		}
-
-		if (FTBEConfig.PLAYER_SPAWN.isEnabled()) {
-			dispatcher.register(Commands.literal("playerspawn")
-					.requires(FTBEConfig.PLAYER_SPAWN)
-					.executes(context -> playerSpawn(context.getSource().getPlayerOrException()))
 			);
 		}
 
@@ -143,21 +134,15 @@ public class TeleportCommands {
 		}).orElse(0);
 	}
 
-	public static int playerSpawn(ServerPlayer player) {
+	public static int spawn(ServerPlayer player) {
 		return FTBEPlayerData.getOrCreate(player).map(data -> {
-			ServerLevel level = player.server.getLevel(player.getRespawnDimension());
+			ServerLevel level = player.server.overworld();
 			if (level == null) {
 				return 0;
 			}
-			BlockPos pos = Objects.requireNonNullElse(player.getRespawnPosition(), level.getSharedSpawnPos());
-			return data.spawnTeleporter.teleport(player, p -> new TeleportPos(level, pos, player.getRespawnAngle(), 0F)).runCommand(player);
-		}).orElse(0);
-	}
 
-	public static int spawn(ServerPlayer player) {
-		return FTBEPlayerData.getOrCreate(player).map(data -> {
-			ServerLevel level = player.server.getLevel(Level.OVERWORLD);
-			return level == null ? 0 : data.spawnTeleporter.teleport(player, p -> new TeleportPos(level, level.getSharedSpawnPos(), level.getSharedSpawnAngle(), 0F)).runCommand(player);
+			BlockPos pos = new BlockPos(level.getLevelData().getXSpawn(), level.getLevelData().getYSpawn(), level.getLevelData().getZSpawn());
+			return data.spawnTeleporter.teleport(player, p -> new TeleportPos(level, pos, level.getLevelData().getSpawnAngle(), 0F)).runCommand(player);
 		}).orElse(0);
 	}
 
